@@ -5,15 +5,15 @@ Run this to get the
 
 from TTS.api import TTS
 import time
-tts = TTS("tts_models/en/ljspeech/tacotron2-DDC")
+tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
 
 def gen_audio(text, ref):
-    tts.tts_with_vc_to_file(
+    tts.tts_to_file(
         text=text,
         file_path="output.wav",
-        speaker_wav=ref,
-        # language="en",
-        # split_sentences=True
+        speaker_wav=[ref],
+        language="en",
+        split_sentences=True
     )
 
 print(time.time())
