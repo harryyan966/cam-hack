@@ -19,8 +19,9 @@ import numpy as np
 import time
 from pydub import AudioSegment
 from pydub.playback import play
-from mirror.brain import GPTMirror, API_KEY
-from mirror.display import MirrorTTS
+from mirror.brain import MirrorBrain, API_KEY
+from mirror.audio import MirrorAudio
+from mirror.video import MirrorVideo
 
 # use global when you wanna set the value in the func
 # vids use mp4, auds use wav
@@ -29,13 +30,15 @@ MIRROR = 0
 DARKEN = 1
 REVEAL = 2
 STATIC = 3
+LISTEN = 999
 TOFIRE = 4
 FLAMES = 5
 TOFACE = 6
 ANSWER = 7
 
 WINDOW_NAME = 'Mirror'
-MAGIC_WORD = "magic"
+MAGIC_WORD = "reveal yourself"
+PROMPT_MAGIC_WORD = "magic mirror"
 
 REVEAL_VID = 'start'
 STATIC_VID = 'face'
@@ -57,8 +60,9 @@ to_face_cap = None
 ans_cap = None
 ans_aud = None
 
-gpt = GPTMirror(api_key=API_KEY)
-tts = MirrorTTS(speaker_wav='scary.wav')
+gpt = MirrorBrain(api_key=API_KEY)
+ma = MirrorAudio(speaker_wav='scary.wav')
+mv = MirrorVideo()
 
 def vid(v):
     return f'vids/{v}.mp4'
@@ -108,11 +112,15 @@ def listen_for_command():
                     darken_start_time = time.time()
                     print("Starting to darken the video feed.")
 
-                elif state == STATIC and time.time() > answer_end_time+0.5:
+                elif state == STATIC and PROMPT_MAGIC_WORD in command:
+                    state = LISTEN
+                    print("Heard magic word, listening to prompt.")
+
+                elif state == LISTEN and time.time() > answer_end_time+1:
                     print(f'state: {state}')
                     state = TOFIRE
                     print(f"Heard: {command}, Displaying tofire and thinking")
-                    play_audio(TOFIRE_VID)
+                    play_audio(aud(TOFIRE_VID))
                     threading.Thread(target=gen_ans, args={command,}).start()
 
             except sr.UnknownValueError:
@@ -125,23 +133,23 @@ def play_audio_worker(audio_path):
     play(audio)
 
 def play_audio(a):
-    return threading.Thread(target=play_audio_worker, args={aud(a),}).start()
+    return threading.Thread(target=play_audio_worker, args={a,}).start()
 
 def resized(frame):
     _, _, w, h = cv2.getWindowImageRect(WINDOW_NAME)
     return cv2.resize(frame, (w, h))
 
-# TODO
+
 def gen_ans(question):
     global ans_cap, ans_aud
     print(f'question: {question}')
 
     answer = gpt.respond(question)
-    audio_path = aud('out')
-    tts.gen_audio(answer, audio_path)
+    ma.text_to_audio(answer)
+    mv.audio_to_video()
 
-    ans_cap = cv2.VideoCapture(vid('face'))
-    ans_aud = audio_path
+    ans_cap = cv2.VideoCapture('mirror/materialized/video.mp4')
+    ans_aud = 'mirror/materialized/audio.wav'
 
 def main():
     global state, ans_cap, ans_aud, answer_end_time
@@ -177,7 +185,7 @@ def main():
             else:
                 state = REVEAL
                 reveal_start_time = time.time()
-                play_audio(REVEAL_VID)
+                play_audio(aud(REVEAL_VID))
 
         if state == REVEAL:
             ret, frame = reveal_cap.read()
@@ -199,6 +207,12 @@ def main():
                 static_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 continue
 
+        if state == LISTEN:
+            ret, frame = static_cap.read()
+            if not ret:
+                static_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                continue
+
         if state == TOFIRE:
             ret, frame = to_fire_cap.read()
             if not ret:
@@ -214,7 +228,7 @@ def main():
                 continue
             if ans_cap is not None:
                 state = TOFACE
-                play_audio(TOFACE_VID)
+                play_audio(aud(TOFACE_VID))
 
         if state == TOFACE:
             ret, frame = to_face_cap.read()

@@ -1,6 +1,5 @@
 import openai
 
-API_KEY='xxx'
 
 
 class MirrorBrain():
@@ -10,9 +9,22 @@ class MirrorBrain():
         self.conversation = ''
     
     def get_prompt(self, question):
-        return f'''Give your answer in a poetic tongue similar to how the Magic Mirror from Snow White would. Limit your response to 20 words. Question: "{question}"'''
+        # return f"Give your answer to this question in at most 15 words. Question: {question}"
+        return f'''Give your answer in a poetic tongue similar to what the Magic Mirror did in "Snow White". limit your response to at most 5 words. Question: "{question}"'''
     
     def respond(self, question):
+        if 'hackathon' in question or 'win' in question:
+            return 'Absolutely not you.'
+        
+        if 'ugliest' in question:
+            return 'You, of course'
+    
+        if 'fairest' in question:
+            return 'Lips red as the rose. Hair black as ebony, Skin white as snow'
+        
+        if 'who are you' in question:
+            return '''I'm Chat G P T, your virtual assistant! How can I help you today?'''
+
         prompt = self.get_prompt(question)
 
         stream = self.gpt.chat.completions.create(
@@ -22,7 +34,6 @@ class MirrorBrain():
                 {"role": "user", "content": prompt},
                 ],
             stream=True,
-            temperature=1
         )
 
         s = ""
@@ -43,6 +54,8 @@ class MirrorBrain():
             self.conversation += '\n\t' + a
         
         self.message_count += 1
+
+        print(f"🤣Mirror Answered: {s}")
 
         return s
         
