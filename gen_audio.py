@@ -10,7 +10,7 @@ Pre-extract the audio files
 import os
 from moviepy.editor import VideoFileClip
 
-ignore = ('start', 'loop')
+ignore = ('start', 'face_to_fire')
 # ignore = ()
 
 # Path to the folder containing video files

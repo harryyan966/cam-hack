@@ -1,6 +1,6 @@
 import openai
 
-client = openai.OpenAI(api_key = 'xxx')
+client = ww
 
 context = ""
 n = 0

@@ -19,7 +19,8 @@ import numpy as np
 import time
 from pydub import AudioSegment
 from pydub.playback import play
-from moviepy.editor import VideoFileClip
+from mirror.brain import GPTMirror, API_KEY
+from mirror.display import MirrorTTS
 
 # use global when you wanna set the value in the func
 # vids use mp4, auds use wav
@@ -55,6 +56,9 @@ flames_cap = None
 to_face_cap = None
 ans_cap = None
 ans_aud = None
+
+gpt = GPTMirror(api_key=API_KEY)
+tts = MirrorTTS(speaker_wav='scary.wav')
 
 def vid(v):
     return f'vids/{v}.mp4'
@@ -128,13 +132,16 @@ def resized(frame):
     return cv2.resize(frame, (w, h))
 
 # TODO
-def gen_ans(prompt):
+def gen_ans(question):
     global ans_cap, ans_aud
-    print(f'prompt: {prompt}')
+    print(f'question: {question}')
 
-    time.sleep(5)
+    answer = gpt.respond(question)
+    audio_path = aud('out')
+    tts.gen_audio(answer, audio_path)
+
     ans_cap = cv2.VideoCapture(vid('face'))
-    ans_aud = 'face'
+    ans_aud = audio_path
 
 def main():
     global state, ans_cap, ans_aud, answer_end_time
