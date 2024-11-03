@@ -37,10 +37,10 @@ WINDOW_NAME = 'Mirror'
 MAGIC_WORD = "magic"
 
 REVEAL_VID = 'start'
-STATIC_VID = 'loop'
-TOFIRE_VID = 'hello_world_video'
-FLAMES_VID = 'ddy'
-TOFACE_VID = 'hello_world_video'
+STATIC_VID = 'face'
+TOFIRE_VID = 'face_to_fire'
+FLAMES_VID = 'fire'
+TOFACE_VID = 'fire_to_face'
 
 state = MIRROR
 
@@ -103,8 +103,8 @@ def listen_for_command():
                     state = DARKEN
                     darken_start_time = time.time()
                     print("Starting to darken the video feed.")
-                    
-                elif state == STATIC and time.time() > answer_end_time+50:
+
+                elif state == STATIC and time.time() > answer_end_time+0.5:
                     print(f'state: {state}')
                     state = TOFIRE
                     print(f"Heard: {command}, Displaying tofire and thinking")
@@ -132,9 +132,9 @@ def gen_ans(prompt):
     global ans_cap, ans_aud
     print(f'prompt: {prompt}')
 
-    time.sleep(3)
-    ans_cap = cv2.VideoCapture(vid(FLAMES_VID))
-    ans_aud = FLAMES_VID
+    time.sleep(5)
+    ans_cap = cv2.VideoCapture(vid('face'))
+    ans_aud = 'face'
 
 def main():
     global state, ans_cap, ans_aud, answer_end_time
@@ -197,7 +197,7 @@ def main():
             if not ret:
                 to_fire_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 state = FLAMES
-                play_audio('elevator')
+                # play_audio('elevator')
                 continue
         
         if state == FLAMES:

@@ -11,6 +11,7 @@ import os
 from moviepy.editor import VideoFileClip
 
 ignore = ('start', 'loop')
+# ignore = ()
 
 # Path to the folder containing video files
 video_folder = "vids"  # Change this to your folder path
